@@ -1,20 +1,9 @@
-# Dépendances Node.js
-node_modules/
-
-# Variables d'environnement
-.env
-
-# Logs
-*.log
-npm-debug.log*
-
-# Dossiers système
-.DS_Store
-Thumbs.db
-
-# Dossiers de build
-dist/
-build/
-
-# MongoDB
+node_modules/ 
+.env 
+*.log 
+npm-debug.log* 
+.DS_Store 
+Thumbs.db 
+dist/ 
+build/ 
 *.mdmp
