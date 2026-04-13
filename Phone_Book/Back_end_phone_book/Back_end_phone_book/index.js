@@ -7,6 +7,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(express.static('dist'));
 
 //app.use(morgan('tiny'))
 
@@ -27,27 +28,28 @@ app.get("/persons", (request, response) => {
   });
 });
 
-app.get("/info", (request, response,next) => {
-  PERSON.countDocuments().then((nb) => {
-    const date = new Date().toString();
-    response.send(`<p>Phonebook has info for ${nb} people</p>
+app.get("/info", (request, response, next) => {
+  PERSON.countDocuments()
+    .then((nb) => {
+      const date = new Date().toString();
+      response.send(`<p>Phonebook has info for ${nb} people</p>
         <p>${date}</p>`);
-  }).catch(error=>next(error))
+    })
+    .catch((error) => next(error));
 });
 
-app.get("/api/persons/:id", (request, response,next) => {
+app.get("/api/persons/:id", (request, response, next) => {
   const id = request.params.id;
-  PERSON.findById(id).then(person=>{
+  PERSON.findById(id)
+    .then((person) => {
       if (person) {
-    console.log(person)
-    response.json(person);
-  } else {
-    return response.status(404).end();
-  }
-
-  }).catch(error => next(error))
-
-
+        console.log(person);
+        response.json(person);
+      } else {
+        return response.status(404).end();
+      }
+    })
+    .catch((error) => next(error));
 });
 
 app.delete("/api/persons/:id", (request, response, next) => {
@@ -60,7 +62,7 @@ app.delete("/api/persons/:id", (request, response, next) => {
     });
 });
 
-app.post("/api/persons", (request, response) => {
+app.post("/api/persons", (request, response, next) => {
   const body = request.body;
 
   if (!body.name || !body.number) {
@@ -71,9 +73,14 @@ app.post("/api/persons", (request, response) => {
       number: body.number,
     });
 
-    newPerson.save().then((personsaved) => {
-      response.status(201).json(personsaved);
-    });
+    newPerson
+      .save()
+      .then((personsaved) => {
+        response.status(201).json(personsaved);
+      })
+      .catch((error) => {
+        next(error);
+      });
   }
 });
 
@@ -99,9 +106,11 @@ app.put("/api/persons/:id", (request, response, next) => {
 
 app.use(unknowEndpoint);
 
-const errorHandler = (request, response, error, next) => {
-  if (error.message === " CastError") {
+const errorHandler = (error, request, response, next) => {
+  if (error.name === " CastError") {
     response.status(400).send({ error: "malformatted Id" });
+  } else if (error.name === "ValidationError") {
+    return response.status(400).json({ error: error.message });
   }
   next(error);
 };

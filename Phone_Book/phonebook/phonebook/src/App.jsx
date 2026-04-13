@@ -15,7 +15,7 @@ const App = () => {
   const [notificationType, setNotificationType] = useState("success");
 
   // pour mes motification
-  const showNotification = (message, type = "success") => {
+  const showNotification = (message, type) => {
     setNotification(message);
     setNotificationType(type);
     setTimeout(() => {
@@ -40,7 +40,6 @@ const App = () => {
   const handleNameChange = (event) => setNewName(event.target.value);
   const handleNumberChange = (event) => setNewNumber(event.target.value);
   const handleFilterChange = (event) => setFilter(event.target.value);
-  
 
   const validateFields = () => {
     if (newName.trim() === "") {
@@ -91,7 +90,7 @@ const App = () => {
           })
           .catch((error) => {
             console.error("Erreur mise à jour :", error);
-            showNotification(` Erreur lors de la mise à jour`, "error");
+            showNotification(`${error.response.data.error}`, "error");
           });
       }
       return;
@@ -113,11 +112,11 @@ const App = () => {
         showNotification(` ${newName} a été ajouté !`, "success");
       })
       .catch((error) => {
-        console.error("Erreur ajout :", error);
-        showNotification(` Erreur lors de l'ajout`, "error");
+        console.log(error);
+       
+       showNotification(`${error.response.data.error}`,"error");
       });
   };
-
   // Supprimer une personne
   const deletePerson = (id) => {
     const person = persons.find((p) => p.id === id);
@@ -164,7 +163,7 @@ const App = () => {
         })
         .catch((error) => {
           console.error("Erreur modification :", error);
-          showNotification(` Erreur lors de la modification`, "error");
+          showNotification(`${error.response.data.error}`,"error");
         });
     }
   };
