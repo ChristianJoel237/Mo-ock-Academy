@@ -1,17 +1,34 @@
 require("dotenv").config();
 const express = require("express");
+const mongoose = require("mongoose");
 const PERSON = require("./models/persons");
 const morgan = require("morgan");
 const cors = require("cors");
-const path = require('path');
+const path = require("path");
 
 const app = express();
 
+// ── Connexion MongoDB optimisée pour Vercel serverless ──
+let isConnected = false;
+const connectDB = async () => {
+  if (isConnected) return;
+  await mongoose.connect(process.env.MONGODB_URI);
+  isConnected = true;
+  console.log("MongoDB connected");
+};
+
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    res.status(500).json({ error: "Database connection failed" });
+  }
+});
+
 app.use(cors());
 app.use(express.json());
-
-// Fichiers statiques du frontend
-app.use(express.static(path.join(__dirname, 'dist')));
+app.use(express.static(path.join(__dirname, "dist")));
 
 morgan.token("body", (request) => {
   if (request.method === "POST") {
@@ -24,10 +41,10 @@ app.use(
 );
 
 // ── Routes API ──────────────────────────────────────
-app.get("/api/persons", (request, response) => {
-  PERSON.find({}).then((persons) => {
-    response.json(persons);
-  });
+app.get("/api/persons", (request, response, next) => {
+  PERSON.find({})
+    .then((persons) => response.json(persons))
+    .catch((error) => next(error));
 });
 
 app.get("/info", (request, response, next) => {
@@ -79,9 +96,9 @@ app.put("/api/persons/:id", (request, response, next) => {
     .catch((error) => next(error));
 });
 
-// ── Route catch-all : DOIT être après toutes les routes API ──
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+// ── Route catch-all frontend ──────────────────────────
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
 
 // ── Error handler ────────────────────────────────────
@@ -95,10 +112,5 @@ const errorHandler = (error, request, response, next) => {
 };
 app.use(errorHandler);
 
-// ── Démarrage ────────────────────────────────────────
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
-
+// ── IMPORTANT : pas de app.listen() pour Vercel ──────
 module.exports = app;
