@@ -22,7 +22,7 @@ app.use(
   morgan(":method :url :status :res[content-length] - :response-time ms :body"),
 );
 
-app.get("/persons", (request, response) => {
+app.get("/api/persons", (request, response) => {
   PERSON.find({}).then((persons) => {
     response.json(persons);
   });
@@ -84,10 +84,6 @@ app.post("/api/persons", (request, response, next) => {
   }
 });
 
-const unknowEndpoint = (request, response) => {
-  response.status(404).send({ error: "unknow endpoint" });
-};
-
 app.put("/api/persons/:id", (request, response, next) => {
   const id = request.params.id;
   const body = request.body;
@@ -104,6 +100,12 @@ app.put("/api/persons/:id", (request, response, next) => {
     .catch((error) => next(error));
 });
 
+
+const unknowEndpoint = (request, response) => {
+  response.status(404).send({ error: "unknow endpoint" });
+};
+
+
 app.use(unknowEndpoint);
 
 const errorHandler = (error, request, response, next) => {
@@ -116,7 +118,7 @@ const errorHandler = (error, request, response, next) => {
 };
 
 app.use(errorHandler);
-const PORT = process.env.PORT;
+const PORT = process.env.PORT||3001;
 app.listen(PORT, () => {
   console.log(`port in running on port ${PORT}`);
 });
