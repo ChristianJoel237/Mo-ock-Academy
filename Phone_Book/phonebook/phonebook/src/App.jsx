@@ -26,7 +26,7 @@ const App = () => {
   // pour recuperer mes donnnes
   useEffect(() => {
     axios
-      .get("http://localhost:3001/persons")
+      .get("api/persons")
       .then((response) => {
         setPersons(response.data);
       })
@@ -75,7 +75,7 @@ const App = () => {
 
         axios
           .put(
-            `http://localhost:3001/api/persons/${existingPerson.id}`,
+            `/api/persons/${existingPerson.id}`,
             updatedPerson,
           )
           .then((response) => {
@@ -104,7 +104,7 @@ const App = () => {
     };
 
     axios
-      .post("http://localhost:3001/api/persons", newPerson)
+      .post("api/persons", newPerson)
       .then((response) => {
         setPersons(persons.concat(response.data));
         setNewName("");
@@ -123,7 +123,7 @@ const App = () => {
 
     if (window.confirm(`Supprimer ${person.name} ?`)) {
       axios
-        .delete(`http://localhost:3001/api/persons/${id}`)
+        .delete(`api/persons/${id}`)
         .then(() => {
           setPersons(persons.filter((p) => p.id !== id));
           showNotification(` ${person.name} a été supprimé`, "success");
@@ -153,7 +153,7 @@ const App = () => {
       };
 
       axios
-        .put(`http://localhost:3001/api/persons/${id}`, updatedPerson)
+        .put(`/api/persons/${id}`, updatedPerson)
         .then((response) => {
           setPersons(persons.map((p) => (p.id === id ? response.data : p)));
           showNotification(
