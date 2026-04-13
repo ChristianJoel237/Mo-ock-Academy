@@ -120,3 +120,5 @@ const PORT = process.env.PORT;
 app.listen(PORT, () => {
   console.log(`port in running on port ${PORT}`);
 });
+
+module.exports =app;
