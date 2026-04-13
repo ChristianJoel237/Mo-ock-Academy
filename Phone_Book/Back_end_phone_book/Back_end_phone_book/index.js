@@ -4,8 +4,10 @@ const PERSON = require("./models/persons");
 const morgan = require("morgan");
 const cors = require("cors");
 const app = express();
+const path = require('path');
 
 app.use(cors());
+app.use(express.static(path.join(__dirname, 'dist')));
 app.use(express.json());
 app.use(express.static('dist'));
 
