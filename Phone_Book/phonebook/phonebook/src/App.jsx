@@ -26,7 +26,7 @@ const App = () => {
   // pour recuperer mes donnnes
   useEffect(() => {
     axios
-      .get("api/persons")
+      .get("/api/persons")
       .then((response) => {
         setPersons(response.data);
       })
@@ -104,7 +104,7 @@ const App = () => {
     };
 
     axios
-      .post("api/persons", newPerson)
+      .post("/api/persons", newPerson)
       .then((response) => {
         setPersons(persons.concat(response.data));
         setNewName("");
@@ -123,7 +123,7 @@ const App = () => {
 
     if (window.confirm(`Supprimer ${person.name} ?`)) {
       axios
-        .delete(`api/persons/${id}`)
+        .delete(`/api/persons/${id}`)
         .then(() => {
           setPersons(persons.filter((p) => p.id !== id));
           showNotification(` ${person.name} a été supprimé`, "success");
