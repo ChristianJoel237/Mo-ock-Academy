@@ -36,7 +36,6 @@ const App = () => {
         const newNotes = notes.filter((note) => note.id != id);
         setNotes(newNotes);
         setErrorMessage("you are Deleted a note");
-    
       });
     }
   };
@@ -72,10 +71,13 @@ const App = () => {
       important: Math.random() > 0.5,
     };
 
-    noteService.create(noteObject).then((returnedNote) => {
-      setNotes(notes.concat(returnedNote));
-      setNewNote("");
-    });
+    noteService
+      .create(noteObject)
+      .then((returnedNote) => {
+        setNotes(notes.concat(returnedNote));
+        setNewNote("");
+      })
+      .catch((error) => setErrorMessage(error.response.data.error));
   };
 
   return (
