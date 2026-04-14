@@ -14,166 +14,162 @@ const App = () => {
   const [notification, setNotification] = useState(null);
   const [notificationType, setNotificationType] = useState("success");
 
-  // pour mes motification
+  // Notifications
   const showNotification = (message, type) => {
     setNotification(message);
     setNotificationType(type);
-    setTimeout(() => {
-      setNotification(null);
-    }, 5000);
+    setTimeout(() => setNotification(null), 5000);
   };
 
-  // pour recuperer mes donnnes
+  // Chargement initial des données
   useEffect(() => {
     axios
-      .get("/api/persons")
+      .get("http://localhost:3001/api/persons")
       .then((response) => {
-        setPersons(response.data);
+        const data = Array.isArray(response.data) ? response.data : [];
+        setPersons(data);
       })
       .catch((error) => {
         console.error("Erreur de chargement :", error);
-        showNotification(" Erreur de connexion au serveur", "error");
+        showNotification("Erreur de connexion au serveur", "error");
       });
   }, []);
 
-  // Gestion devenement
+  // Gestion des événements
   const handleNameChange = (event) => setNewName(event.target.value);
   const handleNumberChange = (event) => setNewNumber(event.target.value);
   const handleFilterChange = (event) => setFilter(event.target.value);
 
   const validateFields = () => {
     if (newName.trim() === "") {
-      showNotification(" the name can be empty", "error");
+      showNotification("Le nom ne peut pas être vide", "error");
       return false;
     }
     if (newNumber.trim() === "") {
-      showNotification(" the number can be empty", "error");
+      showNotification("Le numéro ne peut pas être vide", "error");
       return false;
     }
     return true;
   };
 
-  //pout  Ajouter et mettre à jour une personne
+  // Ajouter ou mettre à jour une personne
   const addPerson = (event) => {
     event.preventDefault();
 
     if (!validateFields()) return;
 
-    // si le non existe deja
     const existingPerson = persons.find(
-      (person) => person.name.toLowerCase() === newName.toLowerCase(),
+      (person) => person.name.toLowerCase() === newName.toLowerCase()
     );
 
     if (existingPerson) {
-      // demande si i can replace
       const confirmReplace = window.confirm(
-        `${newName} is already exist, replace by the old number ?`,
+        `${newName} existe déjà, remplacer par le nouveau numéro ?`
       );
 
       if (confirmReplace) {
-        const updatedPerson = { ...existingPerson, number: newNumber };
-
         axios
-          .put(
-            `/api/persons/${existingPerson.id}`,
-            updatedPerson,
-          )
+          .put(`http://localhost:3001/api/persons/${existingPerson.id}`, {
+            ...existingPerson,
+            number: newNumber,
+          })
           .then((response) => {
             setPersons(
               persons.map((p) =>
-                p.id === existingPerson.id ? response.data : p,
-              ),
+                p.id === existingPerson.id ? response.data : p
+              )
             );
             setNewName("");
             setNewNumber("");
-            showNotification(` ${newName} was update !`, "success");
+            showNotification(`${newName} a été mis à jour !`, "success");
           })
           .catch((error) => {
             console.error("Erreur mise à jour :", error);
-            showNotification(`${error.response.data.error}`, "error");
+            const msg =
+              error.response?.data?.error || "Erreur lors de la mise à jour";
+            showNotification(msg, "error");
           });
       }
       return;
     }
 
-    //  nouveau contact
-    const newPerson = {
-      name: newName,
-      number: newNumber,
-      id: Date.now(),
-    };
-
+    // Nouveau contact
     axios
-      .post("/api/persons", newPerson)
+      .post("http://localhost:3001/api/persons", { name: newName, number: newNumber })
       .then((response) => {
         setPersons(persons.concat(response.data));
         setNewName("");
         setNewNumber("");
-        showNotification(` ${newName} a été ajouté !`, "success");
+        showNotification(`${newName} a été ajouté !`, "success");
       })
       .catch((error) => {
-        console.log(error);
-       
-       showNotification(`${error.response.data.error}`,"error");
+        console.error("Erreur ajout :", error);
+        const msg =
+          error.response?.data?.error || "Erreur lors de l'ajout";
+        showNotification(msg, "error");
       });
   };
+
   // Supprimer une personne
   const deletePerson = (id) => {
     const person = persons.find((p) => p.id === id);
+    if (!person) return;
 
     if (window.confirm(`Supprimer ${person.name} ?`)) {
       axios
-        .delete(`/api/persons/${id}`)
+        .delete(`http://localhost:3001/api/persons/${id}`)
         .then(() => {
           setPersons(persons.filter((p) => p.id !== id));
-          showNotification(` ${person.name} a été supprimé`, "success");
+          showNotification(`${person.name} a été supprimé`, "success");
         })
         .catch((error) => {
           console.error("Erreur suppression :", error);
-          showNotification(` Erreur lors de la suppression`, "error");
+          showNotification("Erreur lors de la suppression", "error");
         });
     }
   };
 
-  // Modifier le numero d'une personne
+  // Modifier le numéro d'une personne
   const updateNumber = (id, currentNumber) => {
-    const newNumber = window.prompt("Nouveau numéro :", currentNumber);
+    const newNum = window.prompt("Nouveau numéro :", currentNumber);
 
-    if (newNumber === null) return; // Annule par l'utilisateur
+    if (newNum === null) return;
 
-    if (newNumber.trim() === "") {
-      showNotification(" Le numéro ne peut pas être vide", "error");
+    if (newNum.trim() === "") {
+      showNotification("Le numéro ne peut pas être vide", "error");
       return;
     }
 
-    if (newNumber !== currentNumber) {
+    if (newNum !== currentNumber) {
       const updatedPerson = {
         ...persons.find((p) => p.id === id),
-        number: newNumber,
+        number: newNum,
       };
 
       axios
-        .put(`/api/persons/${id}`, updatedPerson)
+        .put(`http://localhost:3001/api/persons/${id}`, updatedPerson)
         .then((response) => {
           setPersons(persons.map((p) => (p.id === id ? response.data : p)));
           showNotification(
-            ` Numéro de ${response.data.name} modifié !`,
-            "success",
+            `Numéro de ${response.data.name} modifié !`,
+            "success"
           );
         })
         .catch((error) => {
           console.error("Erreur modification :", error);
-          showNotification(`${error.response.data.error}`,"error");
+          const msg =
+            error.response?.data?.error || "Erreur lors de la modification";
+          showNotification(msg, "error");
         });
     }
   };
 
-  // Filtrer les personnes selon la recherche
+  // Filtrer les personnes
   const personsToShow =
     filter === ""
       ? persons
       : persons.filter((person) =>
-          person.name.toLowerCase().includes(filter.toLowerCase()),
+          person.name.toLowerCase().includes(filter.toLowerCase())
         );
 
   return (
@@ -197,6 +193,7 @@ const App = () => {
       <h3>
         <u>Name & Numbers:</u>
       </h3>
+
       <Persons
         personsToShow={personsToShow}
         handleDelete={deletePerson}

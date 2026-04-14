@@ -8,23 +8,10 @@ const path = require("path");
 
 const app = express();
 
-// ── Connexion MongoDB optimisée pour Vercel serverless ──
-let isConnected = false;
-const connectDB = async () => {
-  if (isConnected) return;
-  await mongoose.connect(process.env.MONGODB_URI);
-  isConnected = true;
-  console.log("MongoDB connected");
-};
-
-app.use(async (req, res, next) => {
-  try {
-    await connectDB();
-    next();
-  } catch (error) {
-    res.status(500).json({ error: "Database connection failed" });
-  }
-});
+// ── Connexion MongoDB ────────────────────────────────
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log("MongoDB connected"))
+  .catch((error) => console.error("MongoDB connection error:", error));
 
 app.use(cors());
 app.use(express.json());
@@ -40,13 +27,16 @@ app.use(
   morgan(":method :url :status :res[content-length] - :response-time ms :body")
 );
 
-// ── Routes API ──────────────────────────────────────
+// ── Routes API ───────────────────────────────────────
+
+// GET toutes les personnes
 app.get("/api/persons", (request, response, next) => {
   PERSON.find({})
     .then((persons) => response.json(persons))
     .catch((error) => next(error));
 });
 
+// GET info
 app.get("/info", (request, response, next) => {
   PERSON.countDocuments()
     .then((nb) => {
@@ -56,24 +46,33 @@ app.get("/info", (request, response, next) => {
     .catch((error) => next(error));
 });
 
+// GET une personne par ID
 app.get("/api/persons/:id", (request, response, next) => {
   PERSON.findById(request.params.id)
     .then((person) => {
       if (person) {
         response.json(person);
       } else {
-        response.status(404).end();
+        response.status(404).json({ error: "Person not found" });
       }
     })
     .catch((error) => next(error));
 });
 
+// DELETE une personne
 app.delete("/api/persons/:id", (request, response, next) => {
   PERSON.findByIdAndDelete(request.params.id)
-    .then(() => response.status(204).end())
+    .then((deleted) => {
+      if (deleted) {
+        response.status(204).end();
+      } else {
+        response.status(404).json({ error: "Person not found" });
+      }
+    })
     .catch((error) => next(error));
 });
 
+// POST nouvelle personne
 app.post("/api/persons", (request, response, next) => {
   const { name, number } = request.body;
   if (!name || !number) {
@@ -85,20 +84,23 @@ app.post("/api/persons", (request, response, next) => {
     .catch((error) => next(error));
 });
 
+// PUT mise à jour personne — findByIdAndUpdate (atomique)
 app.put("/api/persons/:id", (request, response, next) => {
-  PERSON.findById(request.params.id)
-    .then((person) => {
-      person.name = request.body.name;
-      person.number = request.body.number;
-      return person.save();
-    })
-    .then((saved) => response.json(saved))
-    .catch((error) => next(error));
-});
+  const { name, number } = request.body;
 
-// ── Route catch-all frontend ──────────────────────────
-app.get('(.*)', (req, res) => {
-  res.sendFile(path.join(__dirname, "dist", "index.html"));
+  PERSON.findByIdAndUpdate(
+    request.params.id,
+    { name, number },
+    { new: true, runValidators: true, context: "query" }
+  )
+    .then((updated) => {
+      if (updated) {
+        response.json(updated);
+      } else {
+        response.status(404).json({ error: "Person not found" });
+      }
+    })
+    .catch((error) => next(error));
 });
 
 // ── Error handler ────────────────────────────────────
@@ -112,5 +114,10 @@ const errorHandler = (error, request, response, next) => {
 };
 app.use(errorHandler);
 
-// ── IMPORTANT : pas de app.listen() pour Vercel ──────
+// ── Démarrage local ──────────────────────────────────
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
 module.exports = app;

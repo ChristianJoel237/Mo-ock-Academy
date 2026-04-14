@@ -1,16 +1,6 @@
 const mongoose = require("mongoose");
 
 mongoose.set("strictQuery", false);
-const url = process.env.MONGODB_URI;
-
-mongoose
-  .connect(url)
-  .then((result) => {
-    console.log("connection succefuled!");
-  })
-  .catch((error) => {
-    console.log("error for connection:", error.message);
-  });
 
 const personSchema = new mongoose.Schema({
   name: {
@@ -20,13 +10,12 @@ const personSchema = new mongoose.Schema({
   number: {
     type: String,
     required: true,
-   validate: {
-    validator:function(v){
-      return /\d{2,3}-\d{6,}/.test(v)
-    },
-    message: props=> `${props.value} number is not a valide number! `
-
-   }
+    validate: {
+      validator: function(v) {
+        return /\d{2,3}-\d{6,}/.test(v);
+      },
+      message: props => `${props.value} n'est pas un numéro valide!`
+    }
   }
 });
 
