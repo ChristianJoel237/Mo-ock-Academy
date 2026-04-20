@@ -7,8 +7,8 @@ export default [
   {
     files: ["**/*.js"],
     languageOptions: {
-      globals: { ...globals.browser, ...globals.node },
       sourceType: "commonjs",
+      globals: { ...globals.browser, ...globals.node },
       ecmaVersion: "latest",
     },
 
@@ -24,11 +24,7 @@ export default [
       "no-trailing-spaces": "error",
       "object-curly-spacing": ["error", "always"],
       "arrow-spacing": ["error", { before: true, after: true }],
-      'no-console': 'off',
+      'no-console':'off',
     },
-  },
-
-  {
-    ignores: ["dist/**"],
   },
 ];

@@ -1,95 +1,95 @@
-const express = require("express");
-require("dotenv").config();
-const cors = require("cors");
-const app = express();
-const mongoose = require("mongoose");
-const Note = require("./model/note");
-app.use(cors());
-mongoose.set("strictQuery", false);
-const url = process.env.MONGODB_URI;
+const express = require('express')
+require('dotenv').config()
+const cors = require('cors')
+const app = express()
+const mongoose = require('mongoose')
+const Note = require('./model/note')
+app.use(cors())
+mongoose.set('strictQuery', false)
+const url = process.env.MONGODB_URI
 
-mongoose.connect(url);
-app.use(express.static("dist"));
+mongoose.connect(url)
+app.use(express.static('dist'))
 
-app.use(express.json());
+app.use(express.json())
 
-app.get("/", (request, response) => {
-  response.send("<h1>Hello World!</h1>");
-});
+app.get('/', (request, response) => {
+  response.send('<h1>Hello World!</h1>')
+})
 
-app.get("/api/notes", (request, response) => {
+app.get('/api/notes', (request, response) => {
   Note.find({}).then((notes) => {
-    response.json(notes);
-  });
-});
+    response.json(notes)
+  })
+})
 
-app.get("/api/notes/:id", (request, response,next) => {
+app.get('/api/notes/:id', (request, response,next) => {
   Note.findById(request.params.id)
     .then((note) => {
       if (note) {
-        response.json(note);
+        response.json(note)
       } else {
-        response.status(404).end();
+        response.status(404).end()
       }
     })
     .catch((error) => {
-      next(error);
-    });
-});
+      next(error)
+    })
+})
 
-app.delete("/api/notes/:id", (request, response,next) => {
- Note.findByIdAndDelete(request.params.id).then( result=>  response.status(204).end()).catch( error=>{
-  next(error)
- })
+app.delete('/api/notes/:id', (request, response,next) => {
+  Note.findByIdAndDelete(request.params.id).then( result => console.log(result),response.status(204).end()).catch( error => {
+    next(error)
+  })
 
-});
+})
 
-app.post("/api/notes", (request, response,next) => {
-  const body = request.body;
+app.post('/api/notes', (request, response,next) => {
+  const body = request.body
 
   const note = new Note({
     content: body.content,
     important: body.important || false,
-  });
+  })
   note.save().then((savedNote) => {
-    response.json(savedNote);
-  }).catch(error=>next(error))
-});
+    response.json(savedNote)
+  }).catch(error => next(error))
+})
 
-app.put("/api/notes/:id", (req, res,next) => {
-  const {content,important} = req.body
-  Note.findById(req.params.id).then( note =>{
+app.put('/api/notes/:id', (req, res,next) => {
+  const { content,important } = req.body
+  Note.findById(req.params.id).then( note => {
     if(!note){
       res.status(404).end()
     }
     note.content = content
     note.important = important
-    return note.save().then(noteSaved=>{
+    return note.save().then(noteSaved => {
       res.json(noteSaved)
     })
   }).catch( error => next(error))
- 
-});
+
+})
 
 const unknownEndpoint = (request, response) => {
-  response.status(404).send({ error: "unknown endpoint" });
-};
+  response.status(404).send({ error: 'unknown endpoint' })
+}
 
-app.use(unknownEndpoint);
+app.use(unknownEndpoint)
 
 
-const errorHandler = (error,request ,response ,next )=>{
-   
+const errorHandler = (error,request ,response ,next ) => {
+
   if(error.name === 'CastError'){
-    response.status(400).send({error:"malformatted id"})
+    response.status(400).send({ error:'malformatted id' })
   } else if ( error.name === 'ValidationError'){
-   return  response.status(400).json({error:error.message})
+    return  response.status(400).json({ error:error.message })
   }
   next(error)
 }
 
 app.use(errorHandler)
-const PORT = process.env.PORT;
+const PORT = process.env.PORT
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+  console.log(`Server running on port ${PORT}`)
+})
