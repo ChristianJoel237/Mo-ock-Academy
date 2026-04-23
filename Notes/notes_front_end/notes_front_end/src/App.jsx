@@ -1,24 +1,24 @@
-import { useState, useEffect } from "react";
-import Note from "./components/Note";
-import "./index.css";
-import noteService from "./services/notes";
-import Notification from "./components/Notification";
-import Footer from "./components/Footer";
-import axios from "axios";
+import { useState, useEffect } from 'react';
+import Note from './components/Note';
+import './index.css';
+import noteService from './services/notes';
+import Notification from './components/Notification';
+import Footer from './components/Footer';
+import axios from 'axios';
 
 const App = () => {
   const [notes, setNotes] = useState([]);
-  const [newNote, setNewNote] = useState("");
+  const [newNote, setNewNote] = useState('');
   const [showAll, setShowAll] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("...");
+  const [errorMessage, setErrorMessage] = useState(null);
 
   useEffect(() => {
     axios
-      .get("http://localhost:3001/api/notes")
+      .get('http://localhost:3001/api/notes')
       .then((result) => {
         setNotes(result.data);
       })
-      .catch((erreur) => console.log("il y a eu un probleme:", erreur));
+      .catch((erreur) => console.log('il y a eu un probleme:', erreur));
   }, []);
 
   const notesToShow = showAll
@@ -31,11 +31,14 @@ const App = () => {
   }, []);
 
   const handleDelete = (id) => {
-    if (confirm("Are you want to delete this note?")) {
+    if (confirm('Are you want to delete this note?')) {
       noteService.remove(id).then((result) => {
         const newNotes = notes.filter((note) => note.id != id);
         setNotes(newNotes);
-        setErrorMessage("you are Deleted a note");
+        setErrorMessage('you are Deleted a note');
+        setTimeout(() => {
+          setErrorMessage(null);
+        }, 2000);
       });
     }
   };
@@ -50,7 +53,7 @@ const App = () => {
         setNotes(notes.map((note) => (note.id !== id ? note : result)));
       })
       .catch((error) => {
-        console.log("erreur:", error);
+        console.log('erreur:', error);
         setErrorMessage(`la modification a  echoué sur le serveur  `);
         setTimeout(() => {
           setErrorMessage(null);
@@ -75,9 +78,14 @@ const App = () => {
       .create(noteObject)
       .then((returnedNote) => {
         setNotes(notes.concat(returnedNote));
-        setNewNote("");
+        setNewNote('');
       })
-      .catch((error) => setErrorMessage(error.response.data.error));
+      .catch((error) => {
+        setErrorMessage(error.response.data.error);
+        setTimeout(() => {
+          setErrorMessage(null);
+        }, 2000);
+      });
   };
 
   return (
@@ -87,7 +95,7 @@ const App = () => {
       <Notification message={errorMessage} />
       <div>
         <button onClick={() => setShowAll(!showAll)}>
-          show {showAll ? "important" : "all"}
+          show {showAll ? 'important' : 'all'}
         </button>
       </div>
       <ul>
@@ -106,7 +114,7 @@ const App = () => {
           onChange={handleNoteChange}
           placeholder="ajoutez une note"
         />
-        <button type="submit">save</button>{" "}
+        <button type="submit">save</button>{' '}
       </form>
       <Footer />
     </div>
